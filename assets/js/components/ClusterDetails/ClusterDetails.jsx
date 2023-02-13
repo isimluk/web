@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-
-import { groupBy } from '@lib/lists';
 import classNames from 'classnames';
+
+import { capture } from '@lib/analytics';
+import { groupBy } from '@lib/lists';
 
 import PageHeader from '@components/PageHeader';
 import BackButton from '@components/BackButton';
@@ -154,7 +155,8 @@ export function ClusterDetails() {
                 hostList,
                 selectedChecks,
                 navigateFunction
-              ) =>
+              ) => {
+                capture('execution requested', { checks: selectedChecks });
                 dispatch(
                   executionRequested(
                     clusterID,
@@ -162,8 +164,8 @@ export function ClusterDetails() {
                     selectedChecks,
                     navigateFunction
                   )
-                )
-              }
+                );
+              }}
             >
               <EOS_PLAY_CIRCLE
                 className={classNames('inline-block fill-jungle-green-500', {
