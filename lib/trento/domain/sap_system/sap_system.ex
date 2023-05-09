@@ -103,11 +103,13 @@ defmodule Trento.Domain.SapSystem do
   def execute(%SapSystem{rolling_up: true}, _), do: {:error, :sap_system_rolling_up}
 
   def execute(
-        %SapSystem{sap_system_id: nil},
+        %SapSystem{sap_system_id: sap_system_id, deregistered_at: deregistered_at},
         %RegisterDatabaseInstance{
           system_replication: "Secondary"
         }
-      ),
+      )
+      when is_nil(sap_system_id)
+      when not is_nil(deregistered_at),
       do: {:error, :sap_system_not_registered}
 
   # First time that a Database instance is registered, the SAP System starts its registration process.
@@ -115,7 +117,7 @@ defmodule Trento.Domain.SapSystem do
   # has a primary role
   # When an Application is discovered, the SAP System completes the registration process.
   def execute(
-        %SapSystem{sap_system_id: nil},
+        %SapSystem{sap_system_id: current_sap_system_id, deregistered_at: deregistered_at},
         %RegisterDatabaseInstance{
           sap_system_id: sap_system_id,
           sid: sid,
@@ -131,7 +133,9 @@ defmodule Trento.Domain.SapSystem do
           system_replication_status: system_replication_status,
           health: health
         }
-      ) do
+      )
+      when is_nil(current_sap_system_id)
+      when not is_nil(deregistered_at) do
     [
       %DatabaseRegistered{
         sap_system_id: sap_system_id,

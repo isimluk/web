@@ -94,7 +94,7 @@ defmodule Trento.Domain.Host do
 
   # New host registered
   def execute(
-        %Host{host_id: nil},
+        %Host{host_id: current_host_id, deregistered_at: deregistered_at},
         %RegisterHost{
           host_id: host_id,
           hostname: hostname,
@@ -106,7 +106,9 @@ defmodule Trento.Domain.Host do
           os_version: os_version,
           installation_source: installation_source
         }
-      ) do
+      )
+      when is_nil(current_host_id)
+      when not is_nil(deregistered_at) do
     %HostRegistered{
       host_id: host_id,
       hostname: hostname,
@@ -318,7 +320,8 @@ defmodule Trento.Domain.Host do
         socket_count: socket_count,
         os_version: os_version,
         installation_source: installation_source,
-        heartbeat: heartbeat
+        heartbeat: heartbeat,
+        deregistered_at: nil
     }
   end
 

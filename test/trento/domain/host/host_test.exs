@@ -156,6 +156,57 @@ defmodule Trento.HostTest do
         []
       )
     end
+
+    test "should restore a previously deregistered host" do
+      host_id = Faker.UUID.v4()
+      hostname = Faker.StarWars.character()
+      ip_addresses = [Faker.Internet.ip_v4_address()]
+      agent_version = Faker.Internet.slug()
+      cpu_count = Enum.random(1..16)
+      total_memory_mb = Enum.random(1..128)
+      socket_count = Enum.random(1..16)
+      os_version = Faker.App.version()
+      installation_source = Enum.random([:community, :suse, :unknown])
+
+      assert_events_and_state(
+        [],
+        RegisterHost.new!(%{
+          host_id: host_id,
+          hostname: hostname,
+          ip_addresses: ip_addresses,
+          agent_version: agent_version,
+          cpu_count: cpu_count,
+          total_memory_mb: total_memory_mb,
+          socket_count: socket_count,
+          os_version: os_version,
+          installation_source: installation_source
+        }),
+        %HostRegistered{
+          host_id: host_id,
+          hostname: hostname,
+          ip_addresses: ip_addresses,
+          agent_version: agent_version,
+          cpu_count: cpu_count,
+          total_memory_mb: total_memory_mb,
+          socket_count: socket_count,
+          os_version: os_version,
+          installation_source: installation_source,
+          heartbeat: :unknown
+        },
+        %Host{
+          host_id: host_id,
+          hostname: hostname,
+          ip_addresses: ip_addresses,
+          agent_version: agent_version,
+          cpu_count: cpu_count,
+          total_memory_mb: total_memory_mb,
+          socket_count: socket_count,
+          os_version: os_version,
+          installation_source: installation_source,
+          heartbeat: :unknown
+        }
+      )
+    end
   end
 
   describe "heartbeat" do

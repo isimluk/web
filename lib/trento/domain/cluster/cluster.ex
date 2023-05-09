@@ -126,7 +126,7 @@ defmodule Trento.Domain.Cluster do
   # When a DC node is discovered, a cluster is registered and the host is added to the cluster.
   # The cluster details are populated with the information coming from the DC node.
   def execute(
-        %Cluster{cluster_id: nil},
+        %Cluster{cluster_id: current_cluster_id, deregistered_at: deregistered_at},
         %RegisterClusterHost{
           cluster_id: cluster_id,
           host_id: host_id,
@@ -140,7 +140,9 @@ defmodule Trento.Domain.Cluster do
           discovered_health: health,
           designated_controller: true
         }
-      ) do
+      )
+      when is_nil(current_cluster_id)
+      when not is_nil(deregistered_at) do
     [
       %ClusterRegistered{
         cluster_id: cluster_id,
@@ -162,12 +164,17 @@ defmodule Trento.Domain.Cluster do
 
   # When a non-DC node is discovered, a cluster is registered and the host is added to the cluster.
   # The cluster details are left as unknown, and filled once a message from the DC node is received.
-  def execute(%Cluster{cluster_id: nil}, %RegisterClusterHost{
-        cluster_id: cluster_id,
-        name: name,
-        host_id: host_id,
-        designated_controller: false
-      }) do
+  def execute(
+        %Cluster{cluster_id: current_cluster_id, deregistered_at: deregistered_at},
+        %RegisterClusterHost{
+          cluster_id: cluster_id,
+          name: name,
+          host_id: host_id,
+          designated_controller: false
+        }
+      )
+      when is_nil(current_cluster_id)
+      when not is_nil(deregistered_at) do
     [
       %ClusterRegistered{
         cluster_id: cluster_id,
