@@ -167,32 +167,65 @@ defmodule Trento.HostTest do
       socket_count = Enum.random(1..16)
       os_version = Faker.App.version()
       installation_source = Enum.random([:community, :suse, :unknown])
+      dat = DateTime.utc_now()
 
       assert_events_and_state(
         [],
-        RegisterHost.new!(%{
-          host_id: host_id,
-          hostname: hostname,
-          ip_addresses: ip_addresses,
-          agent_version: agent_version,
-          cpu_count: cpu_count,
-          total_memory_mb: total_memory_mb,
-          socket_count: socket_count,
-          os_version: os_version,
-          installation_source: installation_source
-        }),
-        %HostRegistered{
-          host_id: host_id,
-          hostname: hostname,
-          ip_addresses: ip_addresses,
-          agent_version: agent_version,
-          cpu_count: cpu_count,
-          total_memory_mb: total_memory_mb,
-          socket_count: socket_count,
-          os_version: os_version,
-          installation_source: installation_source,
-          heartbeat: :unknown
-        },
+        [
+          RegisterHost.new!(%{
+            host_id: host_id,
+            hostname: hostname,
+            ip_addresses: ip_addresses,
+            agent_version: agent_version,
+            cpu_count: cpu_count,
+            total_memory_mb: total_memory_mb,
+            socket_count: socket_count,
+            os_version: os_version,
+            installation_source: installation_source
+          }),
+          %DeregisterHost{host_id: host_id, deregistered_at: dat},
+          %RegisterHost{
+            host_id: host_id,
+            hostname: hostname,
+            ip_addresses: ip_addresses,
+            agent_version: agent_version,
+            cpu_count: cpu_count,
+            total_memory_mb: total_memory_mb,
+            socket_count: socket_count,
+            os_version: os_version,
+            installation_source: installation_source
+          }
+        ],
+        [
+          %HostRegistered{
+            host_id: host_id,
+            hostname: hostname,
+            ip_addresses: ip_addresses,
+            agent_version: agent_version,
+            cpu_count: cpu_count,
+            total_memory_mb: total_memory_mb,
+            socket_count: socket_count,
+            os_version: os_version,
+            installation_source: installation_source,
+            heartbeat: :unknown
+          },
+          %HostDeregistered{
+            host_id: host_id,
+            deregistered_at: dat
+          },
+          %HostRegistered{
+            host_id: host_id,
+            hostname: hostname,
+            ip_addresses: ip_addresses,
+            agent_version: agent_version,
+            cpu_count: cpu_count,
+            total_memory_mb: total_memory_mb,
+            socket_count: socket_count,
+            os_version: os_version,
+            installation_source: installation_source,
+            heartbeat: :unknown
+          }
+        ],
         %Host{
           host_id: host_id,
           hostname: hostname,
