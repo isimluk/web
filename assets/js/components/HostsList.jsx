@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import { useSearchParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { EOS_WARNING_OUTLINED } from 'eos-icons-react';
+import { EOS_CLEANING_SERVICES, EOS_WARNING_OUTLINED } from 'eos-icons-react';
 
 import Table from '@components/Table';
+import DeregistrationModal from '@components/DeregistrationModal';
 import HealthIcon from '@components/Health/HealthIcon';
 import Tags from '@components/Tags';
 import HostLink from '@components/HostLink';
@@ -16,6 +17,7 @@ import HealthSummary from '@components/HealthSummary/HealthSummary';
 import { getCounters } from '@components/HealthSummary/summarySelection';
 import ProviderLabel from '@components/ProviderLabel';
 import Tooltip from '@components/Tooltip';
+import Button from '@components/Button';
 
 import { addTagToHost, removeTagFromHost } from '@state/hosts';
 import { post, del } from '@lib/network';
@@ -50,8 +52,13 @@ function HostsList() {
   );
 
   const [searchParams, setSearchParams] = useSearchParams();
+  // const [cleanUpModalVisible, setCleanUpModalVisible] = useState(false);
+  const [selectedHost, setSelectedHost] = useState(undefined);
 
   const dispatch = useDispatch();
+
+  // eslint-disable-next-line no-console
+  console.log('hosts', hosts);
 
   const config = {
     pagination: true,
@@ -177,6 +184,30 @@ function HostsList() {
           />
         ),
       },
+      {
+        title: '',
+        key: 'Clean up',
+        className: 'w-48',
+        render: (_content, host) => (
+          <Button
+            type="primary-white"
+            className="inline-block mx-0.5 border-green-500 border w-fit"
+            size="small"
+            onClick={() => {
+              setSelectedHost(host);
+              // setCleanUpModalVisible(!cleanUpModalVisible);
+            }}
+          >
+            <EOS_CLEANING_SERVICES
+              size="base"
+              className="fill-jungle-green-500 inline"
+            />
+            <span className="text-jungle-green-500 text-sm font-bold pl-1.5">
+              Clean up
+            </span>
+          </Button>
+        ),
+      },
     ],
   };
 
@@ -206,6 +237,16 @@ function HostsList() {
   return (
     <>
       <PageHeader className="font-bold">Hosts</PageHeader>
+      <DeregistrationModal
+        host={selectedHost}
+        isOpen={!!selectedHost}
+        onClose={() => setSelectedHost(undefined)}
+        onCleanUp={() => {
+          // eslint-disable-next-line no-console
+          console.log('clicked the big red button!');
+          del(`/hosts/${selectedHost.id}`);
+        }}
+      />
       <div className="bg-white rounded-lg shadow">
         <HealthSummary {...counters} className="px-4 py-2" />
         <Table
