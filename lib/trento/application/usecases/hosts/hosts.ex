@@ -12,6 +12,8 @@ defmodule Trento.Hosts do
 
   alias Trento.Repo
 
+  alias Trento.Domain.Commands.RequestHostDeregistration
+
   @spec get_all_hosts :: [HostReadModel.t()]
   def get_all_hosts do
     HostReadModel
@@ -36,4 +38,33 @@ defmodule Trento.Hosts do
         subscription_count
     end
   end
+
+  @spec deregister_host(String.t()) :: :ok | {:error, any}
+  def deregister_host(host_id) do
+    dat = DateTime.utc_now()
+
+    target_host = HostReadModel
+    |> where([h], h.id == ^host_id)
+    |> Repo.one()
+
+    IO.inspect("TARGET HOST: #{inspect(target_host)}")
+
+    if target_host == nil do
+      IO.inspect("TARGET HOST IS NIL")
+      {:error, :host_not_found}
+    else
+      RequestHostDeregistration.new!(
+        %{host_id: host_id, deregistered_at: dat}
+      )|> commanded().dispatch()
+    end
+
+    # case health do
+    #   :critical -> :ok
+    #   :passing -> {:error, :host_alive}
+    #   _ -> {:error, :host_not_found}
+    # end
+  end
+
+  defp commanded,
+  do: Application.fetch_env!(:trento, Trento.Commanded)[:adapter]
 end

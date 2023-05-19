@@ -48,4 +48,60 @@ defmodule TrentoWeb.V1.HostControllerTest do
              } == resp
     end
   end
+
+  describe "delete" do
+    test "should delete the host", %{conn: conn} do
+      expect(
+        Trento.Commanded.Mock,
+        :dispatch,
+        fn _ ->
+          :ok
+        end
+      )
+
+      #FIXME: we need to not only rely on the heartbeat but also on the timeout
+      %{id: host_id} = insert(:host, heartbeat: :critical)
+
+      delete(conn, "/api/v1/hosts/#{host_id}")
+      |> response(204)
+    end
+
+    test "should return 422 if the host is still alive", %{conn: conn} do
+      expect(
+        Trento.Commanded.Mock,
+        :dispatch,
+        fn _ ->
+          {:error, :host_alive}
+        end
+      )
+
+      %{id: host_id} = insert(:host, heartbeat: :passing)
+
+      delete(conn, "/api/v1/hosts/#{host_id}")
+      |> response(422)
+    end
+
+    test "should return 404 if the host was not found", %{conn: conn} do
+      expect(
+        Trento.Commanded.Mock,
+        :dispatch,
+        fn _ ->
+          {:error, :host_not_registered}
+        end
+      )
+
+      resp =
+        conn
+        |> delete("/api/v1/hosts/#{UUID.uuid4()}")
+        |> response(:not_found)
+
+        IO.inspect("THIS IS THE RESPONSE #{resp}")
+
+      # assert %{
+      #          "errors" => [
+      #            %{"detail" => "The requested resource cannot be found.", "title" => "Not Found"}
+      #          ]
+      #        } == resp
+    end
+  end
 end

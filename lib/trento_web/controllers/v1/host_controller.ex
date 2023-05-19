@@ -28,6 +28,33 @@ defmodule TrentoWeb.V1.HostController do
     render(conn, "hosts.json", hosts: hosts)
   end
 
+  operation :delete,
+  summary: "Deregister a host",
+  description: "Deregister a host agent from Trento",
+  parameters: [
+    id: [
+      in: :path,
+      required: true,
+      type: %OpenApiSpex.Schema{type: :string, format: :uuid}
+    ]
+  ],
+  responses: [
+    no_content: "The host has been deregistered",
+    not_found: TrentoWeb.OpenApi.Schema.NotFound.response(),
+    unprocessable_entity: OpenApiSpex.JsonErrorResponse.response()
+  ]
+
+  @spec delete(Plug.Conn.t(), map) :: Plug.Conn.t()
+  def delete(conn, %{id: host_id}) do
+
+    case Hosts.deregister_host(host_id) do
+      :ok -> send_resp(conn, 204, "")
+      {:error, :host_alive} -> send_resp(conn, 422, "")
+      {:error, _} -> send_resp(conn, 404, "")
+    end
+  end
+
+
   operation :heartbeat,
     summary: "Signal that an agent is alive",
     tags: ["Agent"],

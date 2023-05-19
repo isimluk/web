@@ -244,6 +244,7 @@ function HostsList() {
         onCleanUp={() => {
           // eslint-disable-next-line no-console
           console.log('clicked the big red button!');
+          del(`/hosts/${selectedHost.id}`);
         }}
       />
       <div className="bg-white rounded-lg shadow">
