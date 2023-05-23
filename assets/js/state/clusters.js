@@ -95,13 +95,8 @@ export const clustersListSlice = createSlice({
         return cluster;
       });
     },
-    removeCluster: (state, { payload: { id } }) => {
-      state.clusters = state.clusters.filter((cluster) => cluster.id !== id);
-    },
   },
 });
-
-export const CLUSTER_DEREGISTERED = 'CLUSTER_DEREGISTERED';
 
 export const {
   setClusters,
@@ -115,7 +110,6 @@ export const {
   updateCibLastWritten,
   startClustersLoading,
   stopClustersLoading,
-  removeCluster,
 } = clustersListSlice.actions;
 
 export default clustersListSlice.reducer;

@@ -23,8 +23,6 @@ defmodule Trento.SapSystemProjector do
     SapSystemReadModel
   }
 
-  alias Trento.Repo
-
   project(
     %SapSystemRegistered{
       sap_system_id: sap_system_id,
@@ -209,14 +207,11 @@ defmodule Trento.SapSystemProjector do
         _,
         _
       ) do
-    %SapSystemReadModel{sid: sid} = Repo.get!(SapSystemReadModel, sap_system_id)
-
     TrentoWeb.Endpoint.broadcast(
       @sap_systems_topic,
       "sap_system_deregistered",
       SapSystemView.render("sap_system_deregistered.json",
-        id: sap_system_id,
-        sid: sid
+        sap_system_id: sap_system_id
       )
     )
   end
