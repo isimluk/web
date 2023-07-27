@@ -9,3 +9,14 @@ export const maybeUpdateInstanceHealth = (payload, instance) => {
   }
   return instance;
 };
+
+export const upsertInstances = (currentInstances, newInstances) =>
+  currentInstances.filter((currentApplicationInstance) =>
+    newInstances.every(
+      (newApplicationInstance) =>
+        !payloadMatchesInstance(
+          newApplicationInstance,
+          currentApplicationInstance
+        )
+    )
+  ).concat(newInstances);

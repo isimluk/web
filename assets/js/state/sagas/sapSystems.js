@@ -8,9 +8,12 @@ import {
   APPLICATION_INSTANCE_DEREGISTERED,
   SAP_SYSTEM_DEREGISTERED,
   SAP_SYSTEM_UPDATED,
+  SAP_SYSTEM_RESTORED,
   appendSapsystem,
   updateSapSystemHealth,
   appendApplicationInstance,
+  appendApplicationInstances,
+  appendDatabaseInstancesToSapSystem,
   removeApplicationInstance,
   updateApplicationInstanceHost,
   updateApplicationInstanceHealth,
@@ -86,6 +89,19 @@ export function* sapSystemUpdated({ payload }) {
   yield put(updateSAPSystem(payload));
 }
 
+function* sapSystemRestored({ payload }) {
+  yield put(appendSapsystem(payload));
+  yield put(appendApplicationInstances(payload.application_instances));
+  yield put(appendDatabaseInstancesToSapSystem(payload.database_instances));
+
+  yield put(
+    notify({
+      text: `A new SAP System, ${payload.sid}, has been discovered.`,
+      icon: 'ℹ️',
+    })
+  );
+}
+
 export function* watchSapSystem() {
   yield takeEvery(SAP_SYSTEM_REGISTERED, sapSystemRegistered);
   yield takeEvery(SAP_SYSTEM_HEALTH_CHANGED, sapSystemHealthChanged);
@@ -104,4 +120,5 @@ export function* watchSapSystem() {
   );
   yield takeEvery(SAP_SYSTEM_DEREGISTERED, sapSystemDeregistered);
   yield takeEvery(SAP_SYSTEM_UPDATED, sapSystemUpdated);
+  yield takeEvery(SAP_SYSTEM_RESTORED, sapSystemRestored);
 }

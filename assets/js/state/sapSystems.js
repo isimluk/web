@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { maybeUpdateInstanceHealth } from './instances';
+import { maybeUpdateInstanceHealth, upsertInstances } from './instances';
 
 const initialState = {
   loading: false,
@@ -45,6 +45,12 @@ export const sapSystemsListSlice = createSlice({
         action.payload,
       ];
     },
+    appendApplicationInstances: (state, action) => {
+      state.applicationInstances = upsertInstances(
+        state.applicationInstances,
+        action.payload
+      );
+    },
     removeApplicationInstance: (
       state,
       { payload: { sap_system_id, host_id, instance_number } }
@@ -62,6 +68,12 @@ export const sapSystemsListSlice = createSlice({
     // it need to be appended to the list of the database instances of the relative sap system
     appendDatabaseInstanceToSapSystem: (state, action) => {
       state.databaseInstances = [...state.databaseInstances, action.payload];
+    },
+    appendDatabaseInstancesToSapSystem: (state, action) => {
+      state.databaseInstances = upsertInstances(
+        state.databaseInstances,
+        action.payload
+      );
     },
     removeDatabaseInstanceFromSapSystem: (
       state,
@@ -176,6 +188,7 @@ export const APPLICATION_INSTANCE_HEALTH_CHANGED =
   'APPLICATION_INSTANCE_HEALTH_CHANGED';
 export const SAP_SYSTEM_DEREGISTERED = 'SAP_SYSTEM_DEREGISTERED';
 export const SAP_SYSTEM_UPDATED = 'SAP_SYSTEM_UPDATED';
+export const SAP_SYSTEM_RESTORED = 'SAP_SYSTEM_RESTORED';
 
 export const {
   startSapSystemsLoading,
@@ -183,8 +196,10 @@ export const {
   setSapSystems,
   appendSapsystem,
   appendApplicationInstance,
+  appendApplicationInstances,
   removeApplicationInstance,
   appendDatabaseInstanceToSapSystem,
+  appendDatabaseInstancesToSapSystem,
   removeDatabaseInstanceFromSapSystem,
   updateSapSystemHealth,
   updateApplicationInstanceHost,

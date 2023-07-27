@@ -41,6 +41,7 @@ import {
   SAP_SYSTEM_REGISTERED,
   SAP_SYSTEM_HEALTH_CHANGED,
   SAP_SYSTEM_DEREGISTERED,
+  SAP_SYSTEM_RESTORED,
   startSapSystemsLoading,
   stopSapSystemsLoading,
   setSapSystems,
@@ -344,6 +345,11 @@ function* refreshHealthSummaryOnComnponentsHealthChange() {
   yield debounce(
     debounceDuration,
     HOST_DEREGISTERED,
+    loadSapSystemsHealthSummary
+  );
+  yield debounce(
+    debounceDuration,
+    SAP_SYSTEM_RESTORED,
     loadSapSystemsHealthSummary
   );
 }
