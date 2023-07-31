@@ -191,6 +191,38 @@ defmodule Trento.DatabaseProjector do
     end
   )
 
+  defp add_system_replication_status_to_secondary_instance(
+         %{database_instances: database_instances} = sap_system
+       ) do
+    system_replication_status =
+      Enum.find_value(database_instances, fn
+        %{
+          system_replication: "Primary",
+          system_replication_status: system_replication_status
+        } ->
+          system_replication_status
+
+        _ ->
+          false
+      end)
+
+    database_instances =
+      Enum.map(database_instances, fn
+        %{
+          system_replication: "Secondary"
+        } = instance ->
+          %{instance | system_replication_status: system_replication_status}
+
+        %{system_replication: "Primary"} = instance ->
+          %{instance | system_replication_status: ""}
+
+        instance ->
+          instance
+      end)
+
+    Map.put(sap_system, :database_instances, database_instances)
+  end
+
   @impl true
   def after_update(
         %DatabaseRegistered{},
@@ -302,7 +334,11 @@ defmodule Trento.DatabaseProjector do
     database =
       DatabaseReadModel
       |> Repo.get!(sap_system_id)
-      |> Repo.preload([:tags, :database_instances])
+      |> Repo.preload([
+        [database_instances: :host],
+        :tags
+      ])
+      |> add_system_replication_status_to_secondary_instance
 
     TrentoWeb.Endpoint.broadcast(
       @databases_topic,
