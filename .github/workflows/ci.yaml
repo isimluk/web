@@ -375,6 +375,14 @@ jobs:
     env:
       MIX_ENV: dev
     services:
+      rabbitmq:
+        image: rabbitmq:3.10.5-management-alpine
+        ports:
+          - 5673:5672
+          - 15673:15672
+        env:
+          RABBITMQ_DEFAULT_USER: trento
+          RABBITMQ_DEFAULT_PASS: trento
       postgres:
         image: postgres
         env:
@@ -392,7 +400,60 @@ jobs:
         image: grafana/grafana:8.3.5
         ports:
           - 3000:3000
+      hana_node01:
+        image: ghcr.io/trento-project/barbecue-hana_node01:latest
+        options: >-
+          --add-host=host.docker.internal:host-gateway
+          --hostname=hana_node01
+        env:
+          TRENTO_API_KEY: some-random-string
+          TRENTO_FACTS_SERVICE_URL: amqp://trento:trento@host.docker.internal:5673
+          TRENTO_SERVER_URL: http://host.docker.internal:4000 
+      hana_node02:
+        image: ghcr.io/trento-project/barbecue-hana_node02:latest
+        options: >-
+          --add-host=host.docker.internal:host-gateway
+          --hostname=hana_node02
+        env:
+          TRENTO_API_KEY: some-random-string
+          TRENTO_FACTS_SERVICE_URL: amqp://trento:trento@host.docker.internal:5673
+          TRENTO_SERVER_URL: http://host.docker.internal:4000 
     steps:
+      - name: Create Wanda's database
+        run: docker exec ${{ job.services.postgres.id }} psql -U postgres -c "CREATE DATABASE wanda"
+      - name: Run Wanda init task
+        run: |
+          docker run \
+          -e DATABASE_URL=$DATABASE_URL \
+          -e AMQP_URL=$AMQP_URL \
+          -e SECRET_KEY_BASE=$SECRET_KEY_BASE \
+          -e CORS_ENABLED=$CORS_ENABLED \
+          -e CORS_ORIGIN=$CORS_ORIGIN \
+          -e ACCESS_TOKEN_ENC_SECRET=$ACCESS_TOKEN_ENC_SECRET \
+          -e REFRESH_TOKEN_ENC_SECRET=$REFRESH_TOKEN_ENC_SECRET \
+          -p 4001:4000 \
+          --add-host=host.docker.internal:host-gateway \
+          ghcr.io/trento-project/trento-wanda:rolling eval "Wanda.Release.init()"
+          docker run \
+          -e DATABASE_URL=$DATABASE_URL \
+          -e AMQP_URL=$AMQP_URL \
+          -e SECRET_KEY_BASE=$SECRET_KEY_BASE \
+          -e CORS_ENABLED=$CORS_ENABLED \
+          -e CORS_ORIGIN=$CORS_ORIGIN \
+          -e ACCESS_TOKEN_ENC_SECRET=$ACCESS_TOKEN_ENC_SECRET \
+          -e REFRESH_TOKEN_ENC_SECRET=$REFRESH_TOKEN_ENC_SECRET \
+          -p 4001:4000 \
+          --add-host=host.docker.internal:host-gateway \
+          --detach \
+          ghcr.io/trento-project/trento-wanda:rolling start
+        env:
+          DATABASE_URL: ecto://postgres:postgres@host.docker.internal:5433/wanda
+          AMQP_URL: amqp://trento:trento@host.docker.internal:5673
+          SECRET_KEY_BASE: s2ZdE+3+ke1USHEJ5O45KT364KiXPYaB9cJPdH3p60t8yT0nkLexLBNw8TFSzC7k
+          CORS_ENABLED: "true"
+          CORS_ORIGIN: http://localhost:4000
+          ACCESS_TOKEN_ENC_SECRET: s2ZdE+3+ke1USHEJ5O45KT364KiXPYaB9cJPdH3p60t8yT0nkLexLBNw8TFSzC7k
+          REFRESH_TOKEN_ENC_SECRET: L0wvcZh3ACQpibVhV/nh5jd/NaZWL4ijZxTxGJMGpacuXIBc4In3YCwXeVM98ygp
       - name: Cancel Previous Runs
         uses: styfle/cancel-workflow-action@0.12.0
         with:
