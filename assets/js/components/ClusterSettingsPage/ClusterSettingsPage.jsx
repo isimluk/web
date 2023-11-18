@@ -9,6 +9,7 @@ import {
   getClusterName,
   getClusterSelectedChecks,
   getClusterHosts,
+  getClusterSapSystems,
 } from '@state/selectors/cluster';
 import { updateCatalog } from '@state/actions/catalog';
 import { getCatalog } from '@state/selectors/catalog';
@@ -57,6 +58,9 @@ function ClusterSettingsPage() {
   const selectedChecks = useSelector((state) =>
     getClusterSelectedChecks(state, clusterID)
   );
+  const clusterSapSystems = useSelector((state) =>
+    getClusterSapSystems(state, clusterID)
+  );
   const clusterName = useSelector(getClusterName(clusterID));
 
   const {
@@ -77,6 +81,8 @@ function ClusterSettingsPage() {
 
   const provider = get(cluster, 'provider');
   const type = get(cluster, 'type');
+  const ensaVersion = get(clusterSapSystems, ['0', 'ensa_version']);
+  console.log(ensaVersion);
 
   const refreshCatalog = () =>
     dispatch(
@@ -84,6 +90,7 @@ function ClusterSettingsPage() {
         provider,
         target_type: TARGET_CLUSTER,
         cluster_type: type,
+        ensa_version: ensaVersion,
       })
     );
 

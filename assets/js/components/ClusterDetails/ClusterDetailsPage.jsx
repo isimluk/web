@@ -35,19 +35,6 @@ export function ClusterDetailsPage() {
 
   const lastExecution = useSelector(getLastExecution(clusterID));
 
-  useEffect(() => {
-    if (provider && type) {
-      dispatch(
-        updateCatalog({
-          provider,
-          target_type: TARGET_CLUSTER,
-          cluster_type: type,
-        })
-      );
-      dispatch(updateLastExecution(clusterID));
-    }
-  }, [dispatch, provider, type]);
-
   const clusterHosts = useSelector((state) =>
     getClusterHosts(state, clusterID)
   );
@@ -55,6 +42,24 @@ export function ClusterDetailsPage() {
   const clusterSapSystems = useSelector((state) =>
     getClusterSapSystems(state, clusterID)
   );
+
+  const ensaVersion = get(clusterSapSystems, ['0', 'ensa_version']);
+  console.log(clusterSapSystems);
+  console.log(ensaVersion);
+
+  useEffect(() => {
+    if (provider && type) {
+      dispatch(
+        updateCatalog({
+          provider,
+          target_type: TARGET_CLUSTER,
+          cluster_type: type,
+          ensa_version: ensaVersion,
+        })
+      );
+      dispatch(updateLastExecution(clusterID));
+    }
+  }, [dispatch, provider, type]);
 
   if (!cluster) {
     return <div>Loading...</div>;
